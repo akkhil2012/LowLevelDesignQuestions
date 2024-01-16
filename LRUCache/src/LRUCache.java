@@ -1,72 +1,99 @@
+package org.example;
+
 import org.w3c.dom.Node;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class LRUCache {
-    private int CAPACITY;
-    private LRUNode head;
-    private LRUNode tail;
-    Map<Integer,LRUNode> mapper;
-    public LRUCache(int CAPACITY) {
-        this.CAPACITY = CAPACITY;
-        this.head = new LRUNode(-1,-1);
-        this.tail = new LRUNode(-1,-1);
-        head.nextNode = tail;
-        tail.prevNode=head;
-        mapper = new HashMap<>();
+public class Cache {
+
+
+    Map<Integer, LNode> map;
+
+    int capacity;
+
+    LNode head;
+    LNode tail;
+
+    public Cache(int cap) {
+        this.map = new HashMap<>();
+        capacity = cap;
+        head = new LNode(-1,-1);
+        tail = new LNode(-1,-1);
+        head.next = tail;
+        tail.prev = head;
     }
+
+
+
+    public void put(int key,int value){
+         if(map.containsKey(key)){
+             LNode nodeToUpdate = map.get(key);
+             nodeToUpdate.value = value;
+             //
+             removeNodeFromList(nodeToUpdate);
+             // move the key node to front
+             moveNodeToFront(nodeToUpdate);
+         }else{
+             LNode newNode = new LNode(key,value);
+             if(map.size()>=capacity){
+                 //moveNodeToFront(newNode);
+                 map.remove(tail.prev.key);
+                 removeNodeFromList(tail.prev);
+             }
+             moveNodeToFront(newNode);
+             map.put(key,newNode);
+             /*if(map.size()<capacity){
+                 moveNodeToFront(newNode);
+
+             }else{
+                 map.remove(tail.prev.key);
+                 removeNodeFromList(tail.prev);
+                 moveNodeToFront(newNode);
+             }
+             map.put(key,newNode);*/
+
+
+         }
+    }
+
 
 
     public int get(int key){
-        if(mapper.containsKey(key)){
-            LRUNode node = mapper.get(key);
-            removeNode(node);
-            moveToHead(node);
-            return node.getValue();
+        if(map.containsKey(key)){
+            LNode nodeVisited = map.get(key);
+            // remove node from list
+            removeNodeFromList(nodeVisited);
+            // move the key node to front
+            moveNodeToFront(nodeVisited);
+            return nodeVisited.value;
         }
         return -1;
+    }
+
+    // 1 2 3
+
+    private void moveNodeToFront(LNode nodeToAdd){
+        LNode temp = head.next;
+
+        nodeToAdd.prev = head;
+        nodeToAdd.next = temp;
+
+        head.next = nodeToAdd;
+        temp.prev = nodeToAdd;
 
     }
 
-    public void put(int key,int value){
-        if(mapper.containsKey(key)){
-            LRUNode node = mapper.get(key);
-            node.setValue(value);
-            removeNode(node);
-            moveToHead(node);
-        }else{
-            LRUNode newNode = new LRUNode(key,value);
-            if(mapper.size()<CAPACITY){
-                mapper.put(key,newNode);
-                moveToHead(mapper.get(key));
-            }else{
-                mapper.put(key,newNode);
-                mapper.remove(tail.prevNode.getKey());// remove from Map
-                removeNode(tail.prevNode);
-                moveToHead(newNode);
-                //moveToHead(mapper.get(key));
-            }
+    private void removeNodeFromList(LNode nodeToRemove){
 
-        }
-    }
-
-
-
-    private void moveToHead(LRUNode node) {
-
-        node.nextNode = head.nextNode;
-        node.prevNode = head;
-        head.nextNode = node;
-        node.nextNode.prevNode=node;
+        nodeToRemove.next.prev = nodeToRemove.prev;
+        nodeToRemove.prev.next= nodeToRemove.next;
 
 
     }
 
-    private void removeNode(LRUNode node) {
-        node.nextNode.prevNode = node.prevNode;
-        node.prevNode.nextNode = node.nextNode;
-    }
+
+
 
 
 
@@ -76,33 +103,12 @@ public class LRUCache {
 
 
 
+class LNode{
 
-class LRUNode{
+    int key,value;
+    LNode prev=null,next = null;
 
-    private  int key;
-    private int value;
-
-
-    LRUNode nextNode;
-
-    public int getKey() {
-        return key;
-    }
-
-    public void setKey(int key) {
-        this.key = key;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
-    }
-
-    LRUNode prevNode;
-    public LRUNode(int key, int value) {
+    public LNode(int key, int value) {
         this.key = key;
         this.value = value;
     }
